@@ -4,6 +4,7 @@ from typing import List, Tuple, Dict
 from itertools import tee
 from basket.ride import Count, Item, Ride
 from collections import defaultdict, Counter, OrderedDict
+from inflection import pluralize
 
 StartTime = datetime
 EndTime = datetime
@@ -59,3 +60,8 @@ class ItemCounter:
         for start_time, end_time, items in self.items_per_interval():
             items = [self._format_item_count(item, count) for item, count in items]
             print("{} - {} -> {}".format(start_time, end_time, ", ".join(items)))
+
+    def _format_item_count(self, item: str, count: int) -> str:
+        if count > 1:
+            return "{} {}".format(count, pluralize(item))
+        return "{} {}".format(count, item)
