@@ -3,7 +3,7 @@ from datetime import datetime
 from basket.ride import Ride
 
 
-def test_ride():
+def test_ride() -> None:
     ride = Ride(
         start_time=datetime(2017, 1, 5, 7),
         end_time=datetime(2017, 1, 5, 7, 30),
