@@ -7,7 +7,7 @@ requirements = convert_deps_to_pip(pipfile['packages'], r=False)
 dev_requirements = convert_deps_to_pip(pipfile['dev-packages'], r=False)
 
 setup(
-    name='item-counter',
+    name='basket',
     version='0.1.0',
     packages=find_packages(),
     install_requires=requirements,
