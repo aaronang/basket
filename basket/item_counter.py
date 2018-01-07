@@ -57,7 +57,7 @@ class ItemCounter:
 
     def _format_items(self, items):
         items = [self._format_item_count(item, count) for item, count in items]
-        return ",".join(items)
+        return ", ".join(items)
 
     def _format_item_count(self, item: str, count: int) -> str:
         if count > 1:
