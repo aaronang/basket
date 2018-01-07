@@ -1,22 +1,17 @@
+from collections import Counter, OrderedDict, defaultdict
 from datetime import datetime
-from typing import List, Tuple, Dict
+from typing import Dict, List, Tuple
 
-from itertools import tee
-from basket.ride import Count, Item, Ride
-from collections import defaultdict, Counter, OrderedDict
 from inflection import pluralize
+
+from basket.helpers import pairs
+from basket.ride import Count, Item, Ride
 
 StartTime = datetime
 EndTime = datetime
 ItemCount = Tuple[Item, Count]
 ItemCounts = List[ItemCount]
 ItemCountsPerTime = Dict[datetime, Dict[Item, Count]]
-
-
-def pairs(iterable):
-    a, b = tee(iterable)
-    next(b, None)
-    return zip(a, b)
 
 
 class ItemCounter:
@@ -32,34 +27,37 @@ class ItemCounter:
     def process_ride(self, ride: Ride) -> None:
         self._rides.append(ride)
 
-    def items_per_interval(self) -> List[Tuple[StartTime, EndTime, ItemCounts]]:
-        items_per_start_time, items_per_end_time = self._items_per_time()
-        times = sorted({**items_per_start_time, **items_per_end_time}.keys())
-        result = []
+    def print_items_per_interval(self) -> None:
+        for start_time, end_time, items in self._items_per_interval():
+            items = self._format_items(items)
+            print('{} - {} -> {}'.format(start_time, end_time, items))
+
+    def _items_per_interval(self) -> List[Tuple[StartTime, EndTime, ItemCounts]]:
+        items_per_start_time, items_per_end_time = self._items_per_start_and_end_time()
+        timestamps = self._sorted_timestamps(items_per_start_time, items_per_end_time)
         basket = Counter()
-        for start_time, end_time in pairs(times):
+        for start_time, end_time in pairs(timestamps):
             start_items = items_per_start_time.pop(start_time, Counter())
             end_items = items_per_end_time.pop(start_time, Counter())
             basket = basket + start_items - end_items
-            result.append((start_time, end_time, sorted(basket.items())))
-        return result
+            yield (start_time, end_time, sorted(basket.items()))
 
-    def _items_per_time(self) -> Tuple[ItemCountsPerTime, ItemCountsPerTime]:
+    def _items_per_start_and_end_time(self) -> Tuple[ItemCountsPerTime, ItemCountsPerTime]:
         items_per_start_time = defaultdict(Counter)
         items_per_end_time = defaultdict(Counter)
-        for ride in self.rides:
-            start_time = ride.start_time
-            end_time = ride.end_time
-            items_per_start_time[start_time] = items_per_start_time[start_time] + Counter(ride.items)
-            items_per_end_time[end_time] = items_per_end_time[end_time] + Counter(ride.items)
+        for start_time, end_time, items in self.rides:
+            items_per_start_time[start_time] = items_per_start_time[start_time] + Counter(items)
+            items_per_end_time[end_time] = items_per_end_time[end_time] + Counter(items)
         items_per_start_time = OrderedDict(sorted(items_per_start_time.items()))
         items_per_end_time = OrderedDict(sorted(items_per_end_time.items()))
         return items_per_start_time, items_per_end_time
 
-    def print_items_per_interval(self) -> None:
-        for start_time, end_time, items in self.items_per_interval():
-            items = [self._format_item_count(item, count) for item, count in items]
-            print("{} - {} -> {}".format(start_time, end_time, ", ".join(items)))
+    def _sorted_timestamps(self, start_times, end_times):
+        return sorted({**start_times, **end_times}.keys())
+
+    def _format_items(self, items):
+        items = [self._format_item_count(item, count) for item, count in items]
+        return ",".join(items)
 
     def _format_item_count(self, item: str, count: int) -> str:
         if count > 1:

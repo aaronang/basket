@@ -68,7 +68,7 @@ def test_items_per_interval(item_counter: ItemCounter, rides: List[Ride]) -> Non
         (datetime(2018, 1, 1, 7, 45), datetime(2018, 1, 1, 8), [('apple', 1), ('carrot', 3)]),
     ]
     # yapf: enable
-    assert item_counter.items_per_interval() == expected
+    assert list(item_counter._items_per_interval()) == expected
 
 
 def test_print_items_per_interval(item_counter: ItemCounter, rides: List[Ride]) -> None:
